@@ -10,7 +10,7 @@
 :root{
   --bg:#f1f4f8; --surface:#ffffff; --ink:#16202d; --muted:#586377; --line:#d8dee8; --soft:#e9eef5;
   --a:#2f6db5; --a-ink:#ffffff; --a-land:#1f3f68; --b:#cf7410; --b-ink:#ffffff; --b-land:#7a4106; --route:#1f8e55;
-  --plate1:#e9edf3; --plate2:#f7f9fb; --pf:#cfd6e0; --ps:#c1c9d4; --edge:#3a4555; --pillar:#b6bfcb;
+  --plate0:#dde3ea; --plate1:#e9edf3; --plate2:#f7f9fb; --pf:#cfd6e0; --ps:#c1c9d4; --edge:#3a4555; --pillar:#b6bfcb;
   --note-bg:#fff4d1; --note-ink:#6f4b00; --flag:#fff6a8; --block:#9aa4b3; --plain:#7d8896; --elev:#5b3fa0; --elev2:#7b62bd;
   --display:"Black Han Sans","IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
@@ -18,12 +18,12 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f141b; --surface:#171f2a; --ink:#e7ecf3; --muted:#9ba7b9; --line:#2b3646; --soft:#1d2733;
   --a:#6fa5e8; --a-ink:#0d1a2b; --a-land:#a9c9f2; --b:#f0a24c; --b-ink:#2a1700; --b-land:#f6c890; --route:#4ccb87;
-  --plate1:#26303d; --plate2:#2c3746; --pf:#3a4656; --ps:#334050; --edge:#8d9bb0; --pillar:#4a5768;
+  --plate0:#202934; --plate1:#26303d; --plate2:#2c3746; --pf:#3a4656; --ps:#334050; --edge:#8d9bb0; --pillar:#4a5768;
   --note-bg:#3a2f13; --note-ink:#f2d68e; --flag:#f3e48a; --block:#5a6779; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#0f141b; --surface:#171f2a; --ink:#e7ecf3; --muted:#9ba7b9; --line:#2b3646; --soft:#1d2733;
   --a:#6fa5e8; --a-ink:#0d1a2b; --a-land:#a9c9f2; --b:#f0a24c; --b-ink:#2a1700; --b-land:#f6c890; --route:#4ccb87;
-  --plate1:#26303d; --plate2:#2c3746; --pf:#3a4656; --ps:#334050; --edge:#8d9bb0; --pillar:#4a5768;
+  --plate0:#202934; --plate1:#26303d; --plate2:#2c3746; --pf:#3a4656; --ps:#334050; --edge:#8d9bb0; --pillar:#4a5768;
   --note-bg:#3a2f13; --note-ink:#f2d68e; --flag:#f3e48a; --block:#5a6779; color-scheme:dark }
 
 *{box-sizing:border-box}
@@ -81,7 +81,7 @@ select,.search input{width:100%;padding:11px 12px;border:1px solid var(--line);b
 .pan.home{top:auto;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(31,142,85,.9)}
 @media (prefers-reduced-motion:reduce){.scene svg.in-r,.scene svg.in-l{animation:none}}
 /* 종이 모형 보기: 팀이 만든 도화지 모형처럼 흰 종이 한 가지 색으로 */
-.scene.paper{--soft:#dcd7cb;--plate1:#fbfbf9;--plate2:#ffffff;--pf:#e2e2df;--ps:#d3d3cf;--edge:#8b9097;--pillar:#f4f4f2;
+.scene.paper{--soft:#dcd7cb;--plate0:#eeede8;--plate1:#fbfbf9;--plate2:#ffffff;--pf:#e2e2df;--ps:#d3d3cf;--edge:#8b9097;--pillar:#f4f4f2;
   --a:#2f6db5;--b:#cf7410;--a-land:#1f3f68;--b-land:#7a4106;--route:#1f8e55;--surface:#ffffff;
   --block:#d9d9d5;--plain:#7d8896;--elev:#5b3fa0;--elev2:#7b62bd;--muted:#4c525c;--ink:#262b33;--stepline:#ffffff;color-scheme:light}
 .view-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
@@ -366,6 +366,13 @@ for (const pt of PARTS) for (let f=1; f<=NF; f++) {
   NODES[k]={ p:[pt.c[0],pt.c[1],zOf(f)], name:`${pt.name} ${f}층`, part:pt.name, fl:f, lo:r?r[0]:null, hi:r?r[1]:null };
   PLACES.push(k);
 }
+/* 지하 (동아리방 층, 지하 1층이 끝이라 "지하"로만 표기). 5남 지하 = 5남 X자 계단 옆 ~ 5동 모서리, 5동 지하 = 5동 전체, 5북 지하 = 엘리베이터 쪽 짧게.
+   5동 지하 ↔ 5북 지하 이어짐(엘리베이터 모서리), 5남 지하 ↔ 5동 지하 막힘 */
+const flName=f=>f===0?"지하":`${f}층`;
+NODES.N1_0={ p:[26,1.5,zOf(0)], name:"5남 지하", part:"5남", fl:0, lo:null, hi:null };
+NODES.E_0 ={ p:[XEND-1.5,11,zOf(0)], name:"5동 지하", part:"5동", fl:0, lo:null, hi:null };
+NODES.NB_0={ p:[XEND-4.5,YEND+1.5,zOf(0)], name:"5북 지하", part:"5북", fl:0, lo:null, hi:null };
+PLACES.push("N1_0","E_0","NB_0");
 /* X자 계단 틀: 아래 입구 2개, 위 입구 2개, 반층 참 1개. 각 갈래가 닿는 파트(side) */
 const STAIR_T = {
   A: { land:[10.5,1.5], arms:[
@@ -407,8 +414,10 @@ const NB = { x0:3, x1:XEND, y0:YEND, y1:YEND+3 };          /* 5북 범위 */
 const EB = { x0:XEND-3, x1:XEND, y0:3, y1:YEND };       /* 5동 범위 */
 const PLAIN = {  /* 층 사이 일반 계단 (위치는 예시) */
   NB:{ dir:"x", a:9, b:11.6, w0:YEND+1.3, w1:YEND+2.5, foot:[9,YEND+1.9], top:[11.6,YEND+1.9] },
-  E: { dir:"y", a:YEND-2.6, b:YEND-1.0, w0:XEND-2.9, w1:XEND-1.7, foot:[XEND-2.6,YEND-2.6], top:[XEND-2.0,YEND-2.6], turn:{ y0:YEND-2.6, y1:YEND-1.0, ly1:YEND-.6, xa:XEND-2.9, xm:XEND-2.3, xb:XEND-1.7 } },   /* 엘리베이터 옆 5동 쪽 계단: 시계탑 계단과 같은 되돌이 구조 (남→북 반층, 참에서 돌아 북→남) */
-  N1:{ dir:"y", a:1.0, b:2.6, w0:20.9, w1:22.1, foot:[21.2,1.0], top:[21.8,1.0], tower:true, turn:{ y0:1.0, y1:2.6, ly1:3.0, xa:20.9, xm:21.5, xb:22.1 } }   /* 시계탑 자리 일반 계단: 남→북 반층, 참에서 돌아 북→남 */
+  E: { lo:0, dir:"y", a:YEND-2.6, b:YEND-1.0, w0:XEND-2.9, w1:XEND-1.7, foot:[XEND-2.6,YEND-2.6], top:[XEND-2.0,YEND-2.6], turn:{ y0:YEND-2.6, y1:YEND-1.0, ly1:YEND-.6, xa:XEND-2.9, xm:XEND-2.3, xb:XEND-1.7 } },   /* 엘리베이터 옆 5동 쪽 계단: 시계탑 계단과 같은 되돌이 구조 (남→북 반층, 참에서 돌아 북→남) */
+  N1:{ lo:0, dir:"y", a:1.0, b:2.6, w0:20.9, w1:22.1, foot:[21.2,1.0], top:[21.8,1.0], tower:true, turn:{ y0:1.0, y1:2.6, ly1:3.0, xa:20.9, xm:21.5, xb:22.1 } },   /* 시계탑 자리 일반 계단: 남→북 반층, 참에서 돌아 북→남. 지하까지 */
+  ES:{ lo:0, home:"E", at:f=>f===0?"E_0":`SE_${f}`, lbl:"5동 남쪽 모서리 계단", dir:"y", a:3.4, b:5.0, w0:XEND-2.9, w1:XEND-1.7, foot:[XEND-2.6,3.4], top:[XEND-2.0,3.4], turn:{ y0:3.4, y1:5.0, ly1:5.4, xa:XEND-2.9, xm:XEND-2.3, xb:XEND-1.7 } },   /* 5동 남쪽 모서리 입구 옆, 지하~2층. 1·2층은 5남·5동 모서리에서 타고, 지하에서는 5동 지하로 */
+  XD:{ lo:0, hi:0, home:"N1", lbl:"5남 X자 계단 옆 지하 계단", dir:"x", a:15.0, b:12.6, w0:1.6, w1:2.8, foot:[15.0,2.2], top:[12.6,2.2] }   /* 5남 X자 계단 오른쪽(5남1 쪽)에서 5남 지하로 */
 };
 for (let f=1; f<=NF; f++){
   const z=zOf(f);
@@ -417,13 +426,15 @@ for (let f=1; f<=NF; f++){
   const ws=[[`N1_${f}`,`SE_${f}`,[]],[`SE_${f}`,`E_${f}`,[]],[`E_${f}`,`EL_${f}`,[]],[`NB_${f}`,`EL_${f}`,[]]];
   for(const [a,b,via] of ws){const pts=[NODES[a].p,...via,NODES[b].p];EDGES.push({a,b,type:"walk",pts,w:plen(pts)})}
 }
+NODES.NE_0={ p:[XEND-1.5,YEND+1.5,zOf(0)], name:"5동·5북 모서리 지하", corner:true };
+for(const [a,b] of [["E_0","NE_0"],["NE_0","NB_0"]]){const pts=[NODES[a].p,NODES[b].p];EDGES.push({a,b,type:"walk",pts,w:plen(pts)})}
 for (let g=1; g<NF; g++){ const a=`EL_${g}`,b=`EL_${g+1}`; EDGES.push({a,b,type:"elev",g,arm:`EL-${g}`,pts:[NODES[a].p,NODES[b].p],w:H*2}); }
-for (const [id,S2] of Object.entries(PLAIN)) for (let g=1; g<NF; g++){
-  const z=zOf(g),a=`${id}_${g}`,b=`${id}_${g+1}`;
+for (const [id,S2] of Object.entries(PLAIN)) for (let g=S2.lo??1; g<=(S2.hi??NF-1); g++){
+  const z=zOf(g),hm=S2.home||id,at=S2.at||(f=>`${hm}_${f}`),a=at(g),b=at(g+1);
   const T=S2.turn, pts=T
     ? [NODES[a].p,[S2.foot[0],S2.foot[1],z],[S2.foot[0],(T.y1+T.ly1)/2,z+H/2],[S2.top[0],(T.y1+T.ly1)/2,z+H/2],[S2.top[0],S2.top[1],z+H],NODES[b].p]
     : [NODES[a].p,[S2.foot[0],S2.foot[1],z],[S2.top[0],S2.top[1],z+H],NODES[b].p];
-  EDGES.push({a,b,type:"plain",part:partName(id),lbl:S2.tower?"시계탑 계단":`${partName(id)} 일반 계단`,turn:!!S2.turn,g,arm:`P-${id}-${g}`,pts,w:plen(pts)*1.3});
+  EDGES.push({a,b,type:"plain",part:partName(hm),lbl:S2.lbl||(S2.tower?"시계탑 계단":`${partName(id)} 일반 계단`),turn:!!S2.turn,g,arm:`P-${id}-${g}`,pts,w:plen(pts)*1.3});
 }
 /* 5호관 입구 4곳 = 출발지 (1층). home: 입구가 붙은 파트, join: 복도 중심선으로 들어서는 점 */
 const ENTS = [
@@ -473,7 +484,8 @@ function buildSteps(){
   const out=[{t:`출발 · ${label(s)}`,d:"지금 서 있는 곳입니다.",pts:[],node:s,arms:[]}];
   const seq=shortest(s,t)||[];
   let walk=null;
-  const flush=()=>{ if(walk){out.push({t:`${label(walk.end)}까지 걷기`,d:`${NODES[walk.start].cname||label(walk.start)}에서 ${label(walk.end)}까지 걸어갑니다.`,pts:walk.pts,node:walk.end,arms:[]});walk=null} };
+  const flush=()=>{ if(walk&&plen(walk.pts)<1.5){walk=null;return} /* 입구 바로 옆처럼 거의 안 걷는 구간은 단계로 안 나눔 */
+    if(walk){out.push({t:`${label(walk.end)}까지 걷기`,d:`${NODES[walk.start].cname||label(walk.start)}에서 ${label(walk.end)}까지 걸어갑니다.`,pts:walk.pts,node:walk.end,arms:[]});walk=null} };
   seq.forEach((h,i)=>{
     const e=h.e, fwd=h.from===e.a, pts=fwd?e.pts:[...e.pts].reverse();
     if(e.type==="walk"){
@@ -493,8 +505,8 @@ function buildSteps(){
       return;
     }
     if(e.type==="plain"){
-      const up2=fwd, lf2=`${e.g}층`, uf2=`${e.g+1}층`;
-      out.push({t:`${e.lbl}으로 ${up2?uf2+" 올라가기":lf2+" 내려가기"}`,d:`${e.lbl}을 ${up2?"올라":"내려"}가면 ${e.part} ${up2?uf2:lf2}입니다.`,tip:e.turn?(up2?"북쪽으로 반층 올라가 참에서 돌아, 남쪽으로 다시 올라갑니다.":"북쪽으로 반층 내려가 참에서 돌아, 남쪽으로 다시 내려갑니다."):"",pts,node:h.to,arms:[e.arm]});
+      const up2=fwd, lf2=flName(e.g), uf2=flName(e.g+1);
+      out.push({t:`${e.lbl}으로 ${up2?uf2+" 올라가기":(e.g===0?"지하로":lf2)+" 내려가기"}`,d:`${e.lbl}을 ${up2?"올라":"내려"}가면 ${label(h.to)}입니다.`,tip:e.turn?(up2?"북쪽으로 반층 올라가 참에서 돌아, 남쪽으로 다시 올라갑니다.":"북쪽으로 반층 내려가 참에서 돌아, 남쪽으로 다시 내려갑니다."):"",pts,node:h.to,arms:[e.arm]});
       return;
     }
     const up=fwd, S=SN[e.st], g=e.g, lf=`${g}층`, uf=`${g+1}층`, mid=`${g}.5층`;
@@ -652,6 +664,19 @@ function scene(steps){
   for(const e of steps.flatMap(s=>s.arms)){const g=+e.match(/\d+/)[0];fls.add(g);fls.add(g+1)}
   const fo=f=>fls.has(f)?1:.3;
   let g="",LL="";
+  const showB=state.view==="map"||fls.has(0);
+  if(showB){ /* 지하: 건물별 지도에서는 항상, 5호관 전체에서는 지하로 가는 길일 때만 (다른 건물 그림과 겹치지 않게) */
+    const z=zOf(0),z1=zOf(1),o=fo(0),top="var(--plate0)",th=.2,lo=Math.max(o,.45),po=Math.min(fo(0),fo(1));
+    g+=P_(12.4,XEND,0,3,z,th,top,o)+P_(EB.x0,EB.x1,EB.y0,EB.y1,z,th,top,o)+P_(XEND-7,XEND,NB.y0,NB.y1,z,th,top,o);
+    const kw=boxOp(EB.x0,XEND,2.5,3.5);
+    if(kw){ g+=wallY(EB.x0,XEND,3,z,H*.55).replace(/fill-opacity="[^"]+"/,`fill-opacity="${.75*kw}"`); LL+=txt([XEND+.4,3,z+.25],"5남↔5동 지하 막힘","t-land","start","var(--ink)",Math.max(kw*lo,.6)); }
+    const X=PLAIN.XD,kx=boxOp(12.6,15,X.w0,X.w1);
+    if(kx){ g+=flightX(X.a,X.b,X.w0,X.w1,z,z1,"var(--plain)",(used.has("P-XD-0")?1:.55)*kx); LL+=txt([14.2,-0.9,z+.3],"지하 계단","t-land","middle","var(--plain)",Math.max(kx,.6)); }
+    for(const [x,y] of [[12.4,0],[19,0],[27,0],[XEND-.2,0],[12.4,N1G.depth],[XEND-.2,N1G.depth],[XEND-.2,12],[XEND-.2,EB.y1],[XEND-7,NB.y1],[XEND-.2,NB.y1]]) g+=pil(x,y,z,z1,po);
+    g+=tx(24,1,[24,-0.9,z],"5남 지하","t-floor","middle",null,lo);
+    LL+=tx(XEND-1,9,[XEND+.3,9,z],"5동 지하","t-floor","start",null,lo);
+    LL+=tx(XEND-3,NB.y0+1,[XEND-3.5,NB.y1-.6,z],"5북 지하","t-floor","middle",null,lo);
+  }
   for(let f=1;f<=NF;f++){
     const z=zOf(f),o=fo(f),top=f===1?"var(--plate1)":"var(--plate2)",th=f===1?.2:.15;
     if(f>1){
@@ -721,19 +746,21 @@ function scene(steps){
     g+=txt([XEND-1.5,y0,h+.35],"엘리베이터","t-land","middle","var(--elev)",Math.max(ke,.7));
   }
   /* 되돌이 계단 (시계탑 계단 · 5동 계단): 남→북 반층, 참에서 돌아 북→남 */
-  const turnStair=(id,lab,lp)=>{
+  const turnStair=(id,lab,lp,anc="middle")=>{
     const S2=PLAIN[id],T=S2.turn,k=boxOp(T.xa,T.xb,T.y0,T.ly1); if(!k)return;
-    for(let f=1;f<NF;f++){
+    for(let f=S2.lo??1;f<NF;f++){
+      if(f===0&&!showB)continue;
       const z=zOf(f),zm=z+H/2,op=(used.has(`P-${id}-${f}`)?1:.55)*k;
       g+=poly([[T.xa,T.y1,zm-.18],[T.xb,T.y1,zm-.18],[T.xb,T.y1,zm],[T.xa,T.y1,zm]],"var(--plain)",.6*op,"var(--stepline)",.6);
       g+=poly([[T.xa,T.y1,zm],[T.xb,T.y1,zm],[T.xb,T.ly1,zm],[T.xa,T.ly1,zm]],"var(--plain)",.9*op,"var(--stepline)",.8);
       g+=flightY(T.y0,T.y1,T.xa,T.xm,z,zm,"var(--plain)",op);
       g+=flightY(T.y1,T.y0,T.xm,T.xb,zm,z+H,"var(--plain)",op);
     }
-    g+=txt(lp,lab,"t-land","middle","var(--plain)",Math.max(k,.6));
+    g+=txt(lp,lab,"t-land",anc,"var(--plain)",Math.max(k,.6));
   };
   if(boxOp(TOWER.x0,TOWER.x1,0,TOWER.y1)){ g+=tower(); turnStair("N1","시계탑 계단",[21.5,-.9,0]); }
   turnStair("E","5동 계단",[XEND-2.3,YEND-3.9,0]);
+  turnStair("ES","5동 남쪽 모서리 계단",[XEND-3.4,4.6,0],"end");
   g+=LL;
   if(NF>1){
     if(boxOp(8.6,12.4,0,3)) g+=txt([10.4,-0.9,0],"5남 X자 계단","t-stair","middle","var(--a)",boxOp(8.6,12.4,0,3));
