@@ -416,7 +416,7 @@ const PLAIN = {  /* 층 사이 일반 계단 (위치는 예시) */
   NB:{ dir:"x", a:9, b:11.6, w0:YEND+1.3, w1:YEND+2.5, foot:[9,YEND+1.9], top:[11.6,YEND+1.9] },
   E: { lo:0, dir:"y", a:YEND-2.6, b:YEND-1.0, w0:XEND-2.9, w1:XEND-1.7, foot:[XEND-2.6,YEND-2.6], top:[XEND-2.0,YEND-2.6], turn:{ y0:YEND-2.6, y1:YEND-1.0, ly1:YEND-.6, xa:XEND-2.9, xm:XEND-2.3, xb:XEND-1.7 } },   /* 엘리베이터 옆 5동 쪽 계단: 시계탑 계단과 같은 되돌이 구조 (남→북 반층, 참에서 돌아 북→남) */
   N1:{ lo:0, dir:"y", a:1.0, b:2.6, w0:20.9, w1:22.1, foot:[21.2,1.0], top:[21.8,1.0], tower:true, turn:{ y0:1.0, y1:2.6, ly1:3.0, xa:20.9, xm:21.5, xb:22.1 } },   /* 시계탑 자리 일반 계단: 남→북 반층, 참에서 돌아 북→남. 지하까지 */
-  ES:{ lo:0, home:"E", at:f=>f===0?"E_0":`SE_${f}`, lbl:"5동 남쪽 모서리 계단", dir:"y", a:3.4, b:5.0, w0:XEND-2.9, w1:XEND-1.7, foot:[XEND-2.6,3.4], top:[XEND-2.0,3.4], turn:{ y0:3.4, y1:5.0, ly1:5.4, xa:XEND-2.9, xm:XEND-2.3, xb:XEND-1.7 } },   /* 5동 남쪽 모서리 입구 옆, 지하~2층. 1·2층은 5남·5동 모서리에서 타고, 지하에서는 5동 지하로 */
+  ES:{ lo:0, home:"E", at:f=>f===0?"E_0":`SE_${f}`, lbl:"5남·5동 꼭짓점 계단", dir:"y", a:0.3, b:1.9, w0:XEND-2.9, w1:XEND-1.7, foot:[XEND-2.6,0.3], top:[XEND-2.0,0.3], turn:{ y0:0.3, y1:1.9, ly1:2.3, xa:XEND-2.9, xm:XEND-2.3, xb:XEND-1.7 } },   /* 5남·5동 꼭짓점에 있는 계단, 지하~2층 (v40에서 입구와 자리 바꿈). 1·2층은 모서리에서 타고, 지하에서는 5동 지하로 */
   XD:{ lo:0, hi:0, home:"N1", lbl:"5남 X자 계단 옆 지하 계단", dir:"x", a:15.0, b:12.6, w0:1.6, w1:2.8, foot:[15.0,2.2], top:[12.6,2.2] }   /* 5남 X자 계단 오른쪽(5남1 쪽)에서 5남 지하로 */
 };
 for (let f=1; f<=NF; f++){
@@ -439,7 +439,7 @@ for (const [id,S2] of Object.entries(PLAIN)) for (let g=S2.lo??1; g<=(S2.hi??NF-
 /* 5호관 입구 4곳 = 출발지 (1층). home: 입구가 붙은 파트, join: 복도 중심선으로 들어서는 점 */
 const ENTS = [
   { id:"ENT_S",  name:"5남 가운데 입구 (시계탑)",   p:[21.5,0.3], join:[21.5,0.6],          home:"N1" },
-  { id:"ENT_SE", name:"5동 남쪽 모서리 입구",        p:[XEND-0.3,0.6], join:[XEND-1.5,0.6],  home:"N1" },
+  { id:"ENT_SE", name:"5동 남쪽 모서리 입구",        p:[XEND-0.3,4.4], join:[XEND-1.5,4.4],  home:"E" },   /* v40: 꼭짓점 계단 바로 북쪽(5동 쪽) */
   { id:"ENT_E",  name:"5동 가운데 입구",             p:[XEND-0.3,(3+YEND)/2], join:[XEND-1.5,(3+YEND)/2], home:"E" },
   { id:"ENT_NE", name:"5동 북쪽 모서리 입구",        p:[XEND-0.3,YEND-0.4], join:[XEND-1.5,YEND-0.4], home:"E" }
 ];
@@ -667,13 +667,13 @@ function scene(steps){
   const showB=state.view==="map"||fls.has(0);
   if(showB){ /* 지하: 건물별 지도에서는 항상, 5호관 전체에서는 지하로 가는 길일 때만 (다른 건물 그림과 겹치지 않게) */
     const z=zOf(0),z1=zOf(1),o=fo(0),top="var(--plate0)",th=.2,lo=Math.max(o,.45),po=Math.min(fo(0),fo(1));
-    g+=P_(12.4,XEND,0,3,z,th,top,o)+P_(EB.x0,EB.x1,EB.y0,EB.y1,z,th,top,o)+P_(XEND-7,XEND,NB.y0,NB.y1,z,th,top,o);
-    const kw=boxOp(EB.x0,XEND,2.5,3.5);
-    if(kw){ g+=wallY(EB.x0,XEND,3,z,H*.55).replace(/fill-opacity="[^"]+"/,`fill-opacity="${.75*kw}"`); LL+=txt([XEND+.4,3,z+.25],"5남↔5동 지하 막힘","t-land","start","var(--ink)",Math.max(kw*lo,.6)); }
+    g+=P_(12.4,XEND-3,0,3,z,th,top,o)+P_(EB.x0,EB.x1,0,EB.y1,z,th,top,o)+P_(XEND-7,XEND,NB.y0,NB.y1,z,th,top,o);
+    const kw=boxOp(XEND-3.5,XEND-2.5,0,3);   /* 5남 지하 ↔ 5동 지하 막힘: 꼭짓점 칸(5동 지하 쪽) 서쪽 끝 */
+    if(kw){ g+=wallX(XEND-3,0,3,z,H*.55).replace(/fill-opacity="[^"]+"/,`fill-opacity="${.75*kw}"`); LL+=txt([XEND-3.2,-0.4,z-.55],"5남↔5동 지하 막힘","t-land","end","var(--ink)",Math.max(kw*lo,.6)); }
     const X=PLAIN.XD,kx=boxOp(12.6,15,X.w0,X.w1);
     if(kx){ g+=flightX(X.a,X.b,X.w0,X.w1,z,z1,"var(--plain)",(used.has("P-XD-0")?1:.55)*kx); LL+=txt([14.2,-0.9,z+.3],"지하 계단","t-land","middle","var(--plain)",Math.max(kx,.6)); }
     for(const [x,y] of [[12.4,0],[19,0],[27,0],[XEND-.2,0],[12.4,N1G.depth],[XEND-.2,N1G.depth],[XEND-.2,12],[XEND-.2,EB.y1],[XEND-7,NB.y1],[XEND-.2,NB.y1]]) g+=pil(x,y,z,z1,po);
-    g+=tx(24,1,[24,-0.9,z],"5남 지하","t-floor","middle",null,lo);
+    g+=tx(20,1,[20,-0.9,z],"5남 지하","t-floor","middle",null,lo);
     LL+=tx(XEND-1,9,[XEND+.3,9,z],"5동 지하","t-floor","start",null,lo);
     LL+=tx(XEND-3,NB.y0+1,[XEND-3.5,NB.y1-.6,z],"5북 지하","t-floor","middle",null,lo);
   }
@@ -760,7 +760,7 @@ function scene(steps){
   };
   if(boxOp(TOWER.x0,TOWER.x1,0,TOWER.y1)){ g+=tower(); turnStair("N1","시계탑 계단",[21.5,-.9,0]); }
   turnStair("E","5동 계단",[XEND-2.3,YEND-3.9,0]);
-  turnStair("ES","5동 남쪽 모서리 계단",[XEND-3.4,4.6,0],"end");
+  turnStair("ES","꼭짓점 계단",[XEND+.4,1.2,.9],"start");
   g+=LL;
   if(NF>1){
     if(boxOp(8.6,12.4,0,3)) g+=txt([10.4,-0.9,0],"5남 X자 계단","t-stair","middle","var(--a)",boxOp(8.6,12.4,0,3));
