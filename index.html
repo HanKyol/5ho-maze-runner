@@ -825,7 +825,7 @@ function render(){
   $("routeSum").textContent=`${steps.length-2}구간 · 계단 ${stairs}번`;
   const map=state.view==="map", ck=partOf(NODES[steps[state.step].node].p);
   const fk=map?(state.mapK||bk(ck)):(state.manual||ck);
-  FS= state.view==="all" ? focusSpec("all") : map ? focusSpec(fk).filter(s=>s.op===1) : focusSpec(fk);
+  FS= state.view==="all" ? focusSpec("all") : focusSpec(fk);   /* 건물별 지도: 고른 건물 + 양 끝에 이어지는 건물 조금(흐리게) */
   $("crumb").textContent= state.view==="all" ? "5호관 › 전체" : map ? `5호관 › ${PNAME[fk]} 전체 지도` : `5호관 › ${PNAME[fk]}`;
   $("viewAll").setAttribute("aria-pressed",state.view==="all"); $("viewMap").setAttribute("aria-pressed",map);
   $("bldgTabs").hidden=!map;
@@ -834,7 +834,7 @@ function render(){
   /* 건물별 지도 + 휴대폰 세로: 긴 건물(5남·5북)은 두 줄로 나눠 한 화면에 모두 보이게 */
   const half=map&&($("scene").clientWidth||innerWidth)<640&&HALF[fk];
   $("scene").innerHTML= half
-    ? half.map(h=>{FS=[{...h,op:1}];return `<p class="half-cap">${h.cap}</p>`+scene(steps)}).join("")
+    ? half.map(h=>{FS=[{...h,op:1},...focusSpec(fk).filter(s=>s.op<1&&s.x1>=h.x0&&s.x0<=h.x1)];return `<p class="half-cap">${h.cap}</p>`+scene(steps)}).join("")
     : scene(steps);
   if(state.view==="part"){
     const i=RING.indexOf(fk),pv=RING[i-1],nx=RING[i+1];
