@@ -371,7 +371,7 @@ for (const pt of PARTS) for (let f=1; f<=NF; f++) {
 /* 지하 (동아리방 층, 지하 1층이 끝이라 "지하"로만 표기). 5남 지하 = 5남 X자 계단 옆 ~ 5동 모서리, 5동 지하 = 5동 전체, 5북 지하 = 엘리베이터 쪽 짧게.
    5동 지하 ↔ 5북 지하 이어짐(엘리베이터 모서리), 5남 지하 ↔ 5동 지하 막힘 */
 const flName=f=>f===0?"지하":`${f}층`;
-NODES.N1_0={ p:[26,1.5,zOf(0)], name:"5남 지하", part:"5남", fl:0, lo:null, hi:null };
+NODES.N1_0={ p:[17.5,1.5,zOf(0)], name:"5남 지하", part:"5남", fl:0, lo:null, hi:null };
 NODES.E_0 ={ p:[XEND-1.5,11,zOf(0)], name:"5동 지하", part:"5동", fl:0, lo:null, hi:null };
 NODES.NB_0={ p:[XEND-4.5,YEND+1.5,zOf(0)], name:"5북 지하", part:"5북", fl:0, lo:null, hi:null };
 PLACES.push("N1_0","E_0","NB_0");
@@ -669,13 +669,12 @@ function scene(steps){
   const showB=state.view==="map"||fls.has(0);
   if(showB){ /* 지하: 건물별 지도에서는 항상, 5호관 전체에서는 지하로 가는 길일 때만 (다른 건물 그림과 겹치지 않게) */
     const z=zOf(0),z1=zOf(1),o=fo(0),top="var(--plate0)",th=.2,lo=Math.max(o,.45),po=Math.min(fo(0),fo(1));
-    g+=P_(12.4,XEND-3,0,3,z,th,top,o)+P_(EB.x0,EB.x1,0,EB.y1,z,th,top,o)+P_(XEND-7,XEND,NB.y0,NB.y1,z,th,top,o);
-    const kw=boxOp(XEND-3.5,XEND-2.5,0,3);   /* 5남 지하 ↔ 5동 지하 막힘: 꼭짓점 칸(5동 지하 쪽) 서쪽 끝 */
-    if(kw){ g+=wallX(XEND-3,0,3,z,H*.55).replace(/fill-opacity="[^"]+"/,`fill-opacity="${.75*kw}"`); LL+=txt([XEND-3.2,-0.4,z-.55],"5남↔5동 지하 막힘","t-land","end","var(--ink)",Math.max(kw*lo,.6)); }
+    g+=P_(12.4,TOWER.x1,0,3,z,th,top,o)+   /* 5남 지하: X자 계단 옆 ~ 시계탑까지만 (v46, 시계탑 동쪽은 지하 없음) */
+      P_(EB.x0,EB.x1,0,EB.y1,z,th,top,o)+P_(XEND-7,XEND,NB.y0,NB.y1,z,th,top,o);
     const X=PLAIN.XD,kx=boxOp(12.6,15,X.w0,X.w1);
     if(kx){ g+=flightX(X.a,X.b,X.w0,X.w1,z,z1,"var(--plain)",(used.has("P-XD-0")?1:.55)*kx); LL+=txt([14.2,-0.9,z+.3],"지하 계단","t-land","middle","var(--plain)",Math.max(kx,.6)); }
-    for(const [x,y] of [[12.4,0],[19,0],[27,0],[XEND-.2,0],[12.4,N1G.depth],[XEND-.2,N1G.depth],[XEND-.2,12],[XEND-.2,EB.y1],[XEND-7,NB.y1],[XEND-.2,NB.y1]]) g+=pil(x,y,z,z1,po);
-    g+=tx(20,1,[20,-0.9,z],"5남 지하","t-floor","middle",null,lo);
+    for(const [x,y] of [[12.4,0],[TOWER.x1-.2,0],[XEND-.2,0],[12.4,N1G.depth],[TOWER.x1-.2,N1G.depth],[XEND-3,0],[XEND-3,N1G.depth],[XEND-.2,N1G.depth],[XEND-.2,12],[XEND-.2,EB.y1],[XEND-7,NB.y1],[XEND-.2,NB.y1]]) g+=pil(x,y,z,z1,po);
+    g+=tx(17.5,1,[17.5,-0.9,z],"5남 지하","t-floor","middle",null,lo);
     LL+=tx(XEND-1,9,[XEND+.3,9,z],"5동 지하","t-floor","start",null,lo);
     LL+=tx(XEND-3,NB.y0+1,[XEND-3.5,NB.y1-.6,z],"5북 지하","t-floor","middle",null,lo);
   }
