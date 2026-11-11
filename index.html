@@ -334,7 +334,7 @@ svg text{font-family:var(--body)}
 
 <script>
 /* ═════════ 확장 설정: 이 블록만 고치면 층·길이·강의실이 늘어남 ═════════ */
-const NF   = 2;      /* 층 수. 3층 이상으로 늘리면 X자 계단·바닥판·출발지가 자동으로 생김 */
+const NF   = 3;      /* 층 수. 3층 이상으로 늘리면 X자 계단·바닥판·출발지가 자동으로 생김 */
 const H    = 3.2;    /* 한 층 높이 (그림 단위) */
 const XEND = 35.2;   /* 5남 끝: 오른쪽 끝 복도 = 5남 X자 계단 왼쪽 구역 길이(8.6) */
 /* 5남 시계탑: 5남1에서 위치를 가늠하는 기준. x0~x1 = 가로 위치, y1 = 깊이, h = 높이 */
@@ -352,7 +352,7 @@ const PARTS = [
   { id:"E",  name:"5동",  c:[XEND-1.5,11] }
 ];
 /* 호실 범위: 예시 (현장 확인 전). "파트_층": [시작, 끝] */
-const RANGES = { N1_1:[131,147], N1_2:[231,247], N2_1:[101,124], N2_2:[201,224], W_1:[151,172], W_2:[251,272] };
+const RANGES = { N1_1:[131,147], N1_2:[231,247], N1_3:[331,347], N2_1:[101,124], N2_2:[201,224], N2_3:[301,324], W_1:[151,172], W_2:[251,272], W_3:[351,372] };
 /* 강의실 위치: 나중에 입력. 예) { part:"N1", fl:1, no:"135", at:[15.0,3] } → at = 복도 벽 위치(x,y) */
 const ROOMS = [];
 /* ═══════════════════════════════════════════════════════════════════ */
@@ -418,7 +418,7 @@ const PLAIN = {  /* 층 사이 일반 계단 (위치는 예시) */
   NB:{ dir:"x", a:9, b:11.6, w0:YEND+1.3, w1:YEND+2.5, foot:[9,YEND+1.9], top:[11.6,YEND+1.9] },
   E: { lo:0, dir:"y", a:YEND-2.6, b:YEND-1.0, w0:XEND-2.9, w1:XEND-1.7, foot:[XEND-2.6,YEND-2.6], top:[XEND-2.0,YEND-2.6], turn:{ y0:YEND-2.6, y1:YEND-1.0, ly1:YEND-.6, xa:XEND-2.9, xm:XEND-2.3, xb:XEND-1.7 } },   /* 엘리베이터 옆 5동 쪽 계단: 시계탑 계단과 같은 되돌이 구조 (남→북 반층, 참에서 돌아 북→남) */
   N1:{ lo:0, dir:"y", a:1.0, b:2.6, w0:20.9, w1:22.1, foot:[21.2,1.0], top:[21.8,1.0], tower:true, turn:{ y0:1.0, y1:2.6, ly1:3.0, xa:20.9, xm:21.5, xb:22.1 } },   /* 시계탑 자리 일반 계단: 남→북 반층, 참에서 돌아 북→남. 지하까지 */
-  ES:{ lo:0, home:"E", at:f=>f===0?"E_0":`SE_${f}`, lbl:"5남·5동 꼭짓점 계단", dir:"y", a:0.3, b:1.9, w0:XEND-2.9, w1:XEND-1.7, foot:[XEND-2.6,0.3], top:[XEND-2.0,0.3], turn:{ y0:0.3, y1:1.9, ly1:2.3, xa:XEND-2.9, xm:XEND-2.3, xb:XEND-1.7 } },   /* 5남·5동 꼭짓점에 있는 계단, 지하~2층 (v40에서 입구와 자리 바꿈). 1·2층은 모서리에서 타고, 지하에서는 5동 지하로 */
+  ES:{ lo:0, hi:1, home:"E", at:f=>f===0?"E_0":`SE_${f}`, lbl:"5남·5동 꼭짓점 계단", dir:"y", a:0.3, b:1.9, w0:XEND-2.9, w1:XEND-1.7, foot:[XEND-2.6,0.3], top:[XEND-2.0,0.3], turn:{ y0:0.3, y1:1.9, ly1:2.3, xa:XEND-2.9, xm:XEND-2.3, xb:XEND-1.7 } },   /* 5남·5동 꼭짓점에 있는 계단, 지하~2층 (v40에서 입구와 자리 바꿈). 1·2층은 모서리에서 타고, 지하에서는 5동 지하로 */
   XD:{ lo:0, hi:0, home:"N1", lbl:"5남 X자 계단 옆 지하 계단", dir:"x", a:15.0, b:12.6, w0:1.6, w1:2.8, foot:[15.0,2.2], top:[12.6,2.2] }   /* 5남 X자 계단 오른쪽(5남1 쪽)에서 5남 지하로 */
 };
 for (let f=1; f<=NF; f++){
@@ -702,7 +702,7 @@ function scene(steps){
     LL+=tx(XEND-1,6,[XEND+.3,6,z],`5동 ${f}층`,"t-floor","start",null,lo);
     if(f<NF){
       for(const [id,S2] of Object.entries(PLAIN)){
-        if(S2.turn)continue;
+        if(S2.turn||f<(S2.lo??1)||f>(S2.hi??NF-1))continue;   /* 그 층에 없는 계단은 그리지 않음 (v45: 5남 X자 계단 옆 지하 계단이 1~2층에 잘못 그려지던 것 고침) */
         const k=S2.dir==="x"?boxOp(S2.a,S2.b,S2.w0,S2.w1):boxOp(S2.w0,S2.w1,S2.a,S2.b); if(!k)continue;
         const op=(used.has(`P-${id}-${f}`)?1:.4)*k;
         g+= S2.dir==="x" ? flightX(S2.a,S2.b,S2.w0,S2.w1,z,z+H,"var(--plain)",op) : flightY(S2.a,S2.b,S2.w0,S2.w1,z,z+H,"var(--plain)",op);
@@ -750,7 +750,7 @@ function scene(steps){
   /* 되돌이 계단 (시계탑 계단 · 5동 계단): 남→북 반층, 참에서 돌아 북→남 */
   const turnStair=(id,lab,lp,anc="middle")=>{
     const S2=PLAIN[id],T=S2.turn,k=boxOp(T.xa,T.xb,T.y0,T.ly1); if(!k)return;
-    for(let f=S2.lo??1;f<NF;f++){
+    for(let f=S2.lo??1;f<=(S2.hi??NF-1);f++){
       if(f===0&&!showB)continue;
       const z=zOf(f),zm=z+H/2,op=(used.has(`P-${id}-${f}`)?1:.55)*k;
       g+=poly([[T.xa,T.y1,zm-.18],[T.xb,T.y1,zm-.18],[T.xb,T.y1,zm],[T.xa,T.y1,zm]],"var(--plain)",.6*op,"var(--stepline)",.6);
