@@ -64,6 +64,8 @@ select,.search input{width:100%;padding:11px 12px;border:1px solid var(--line);b
 .route-head h2{font-size:20px;font-weight:700}
 .route-head .sum{color:var(--muted);font-size:14px}
 .scene{--stepline:var(--surface);background:var(--soft);border-radius:12px;overflow:hidden;position:relative;touch-action:pan-y}
+.scene svg{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none} .scene svg:active{cursor:grabbing}
+.pz-reset{position:absolute;right:8px;top:8px;z-index:2;border:0;border-radius:999px;padding:6px 12px;min-height:34px;font-weight:700;font-size:13px;background:rgba(22,32,45,.72);color:#fff;cursor:pointer}
 .scene svg.in-r{animation:inR .38s cubic-bezier(.2,.7,.3,1)} .scene svg.in-l{animation:inL .38s cubic-bezier(.2,.7,.3,1)}
 @keyframes inR{from{transform:translateX(30%);opacity:0}to{transform:none;opacity:1}}
 @keyframes inL{from{transform:translateX(-30%);opacity:0}to{transform:none;opacity:1}}
@@ -787,6 +789,7 @@ function scene(steps){
   if(here) g+=`<g class="marker" transform="translate(${mx.toFixed(1)},${my.toFixed(1)}) scale(__BS__)">${buddy()}</g>`;
   const pd=state.view==="map"?50:0;   /* 건물별 지도: 큰 글자가 잘리지 않게 여백 */
   VB.x=BB.x0-24-pd;VB.y=BB.y0-16-pd;VB.w=BB.x1-BB.x0+48+2*pd;VB.h=BB.y1-BB.y0+40+2*pd;
+  const FB={...VB};   /* 그림 전체 범위: 손가락으로 움직일 때 이 안에서만 */
   /* 휴대폰 세로: 그림이 너무 납작하면 현위치 중심으로 잘라 크게 보여 줌 */
   const cw=($("scene").clientWidth||innerWidth);
   if(!here||state.manual){mx=VB.x+VB.w/2;my=VB.y+VB.h/2+30;}
@@ -797,7 +800,7 @@ function scene(steps){
     VB.w=nw; VB.h=nh;
   }
   const bs=state.view==="map"?(1.25*Math.max(1,VB.w/1100)).toFixed(2):"1.25";   /* 건물별 지도: 넓은 그림에서도 캐릭터가 보이게 */
-  return `<svg viewBox="${VB.x.toFixed(0)} ${VB.y.toFixed(0)} ${VB.w.toFixed(0)} ${VB.h.toFixed(0)}" role="img" aria-label="5호관 입체 모형 위의 경로">${g.replace("scale(__BS__)",`scale(${bs})`)}</svg>`;
+  return `<svg viewBox="${VB.x.toFixed(0)} ${VB.y.toFixed(0)} ${VB.w.toFixed(0)} ${VB.h.toFixed(0)}" data-fb="${[FB.x,FB.y,FB.w,FB.h].map(v=>v.toFixed(0)).join(" ")}" role="img" aria-label="5호관 입체 모형 위의 경로">${g.replace("scale(__BS__)",`scale(${bs})`)}</svg>`;
 }
 
 /* ───────── 화면 ───────── */
@@ -838,6 +841,7 @@ function render(){
   $("scene").innerHTML= half
     ? half.map(h=>{FS=[{...h,op:1},...focusSpec(fk).filter(s=>s.op<1&&s.x1>=h.x0&&s.x0<=h.x1)];return `<p class="half-cap">${h.cap}</p>`+scene(steps)}).join("")
     : scene(steps);
+  $("scene").insertAdjacentHTML("beforeend",`<button type="button" class="pz-reset" hidden>↺ 원래대로</button>`); PTR.clear(); PZ=null;
   if(state.view==="part"){
     const i=RING.indexOf(fk),pv=RING[i-1],nx=RING[i+1];
     $("scene").insertAdjacentHTML("beforeend",
@@ -894,14 +898,51 @@ $("scene").addEventListener("click",e=>{
   if(b.id==="panHome"){state.manual=null;state.mapK=null;state.slide="in-l";render();return}
   const r=ringNow(),i=r.indexOf(curK()),j=r.indexOf(b.dataset.k); panTo(b.dataset.k,j>i?1:-1);
 });
-let tx0=null,ty0=null;
-$("scene").addEventListener("touchstart",e=>{const t=e.touches[0];tx0=t.clientX;ty0=t.clientY},{passive:true});
-$("scene").addEventListener("touchend",e=>{
-  if(tx0===null||state.view==="all")return;
-  const t=e.changedTouches[0],dx=t.clientX-tx0,dy=t.clientY-ty0; tx0=null;
-  if(Math.abs(dx)<45||Math.abs(dx)<Math.abs(dy)*1.4)return;
-  const r=ringNow(),i=r.indexOf(curK()); if(dx<0) panTo(r[i+1],1); else panTo(r[i-1],-1);
-},{passive:true});
+/* 지도 손가락으로 움직이기: 한 손가락 끌기 = 이동, 두 손가락 벌리기·오므리기 = 확대·축소, 두 번 톡 = 원래대로.
+   (예전의 옆으로 밀어 건물 넘기기는 없앰 — 건물은 위 5동·5서·5남·5북 줄로 고름) */
+const PTR=new Map(); let PZ=null, lastTap=0;
+const vbOf=svg=>{const [x,y,w,h]=svg.getAttribute("viewBox").split(/\s+/).map(Number);return {x,y,w,h}};
+function toSvg(svg,v,cx,cy){const r=svg.getBoundingClientRect(),s=Math.max(v.w/r.width,v.h/r.height),ox=(r.width-v.w/s)/2,oy=(r.height-v.h/s)/2;return [v.x+(cx-r.left-ox)*s,v.y+(cy-r.top-oy)*s]}
+function place(svg,v0,P,cx,cy,w){   /* 그림 점 P가 손가락 (cx,cy) 아래에 오도록, 폭 w로 */
+  const r=svg.getBoundingClientRect(),[fx,fy,fw,fh]=svg.dataset.fb.split(" ").map(Number);
+  const maxW=Math.max(fw,fh*r.width/Math.max(1,r.height),v0.w)*1.1, minW=Math.min(260,maxW);
+  w=Math.min(maxW,Math.max(minW,w)); const h=w*v0.h/v0.w;
+  const s=Math.max(w/r.width,h/r.height),ox=(r.width-w/s)/2,oy=(r.height-h/s)/2;
+  let x=P[0]-(cx-r.left-ox)*s, y=P[1]-(cy-r.top-oy)*s;
+  x=Math.min(Math.max(x,fx-w/2),fx+fw-w/2); y=Math.min(Math.max(y,fy-h/2),fy+fh-h/2);   /* 그림 밖으로 너무 나가지 않게 */
+  svg.setAttribute("viewBox",`${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`);
+  if(!svg.dataset.vb0) svg.dataset.vb0=`${v0.x} ${v0.y} ${v0.w} ${v0.h}`;
+  $("scene").querySelector(".pz-reset")?.removeAttribute("hidden");
+}
+function pzStart(svg){
+  const pts=[...PTR.values()], v0=vbOf(svg);
+  if(pts.length===1){ PZ={svg,v0,mode:1,c:[pts[0].x,pts[0].y],P:toSvg(svg,v0,pts[0].x,pts[0].y),moved:false}; }
+  else { const [a,b]=pts,c=[(a.x+b.x)/2,(a.y+b.y)/2]; PZ={svg,v0,mode:2,c,d:Math.hypot(a.x-b.x,a.y-b.y)||1,P:toSvg(svg,v0,c[0],c[1]),moved:true}; }
+}
+function pzReset(){ $("scene").querySelectorAll("svg[data-vb0]").forEach(sv=>{sv.setAttribute("viewBox",sv.dataset.vb0);delete sv.dataset.vb0}); $("scene").querySelector(".pz-reset")?.setAttribute("hidden",""); }
+$("scene").addEventListener("pointerdown",e=>{
+  const svg=e.target.closest("svg"); if(!svg||e.target.closest("button")||PTR.size>=2)return;
+  if(PZ&&PZ.svg!==svg)return;
+  PTR.set(e.pointerId,{x:e.clientX,y:e.clientY}); try{svg.setPointerCapture(e.pointerId)}catch(_){}
+  pzStart(svg);
+});
+$("scene").addEventListener("pointermove",e=>{
+  if(!PTR.has(e.pointerId)||!PZ)return; PTR.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const pts=[...PTR.values()];
+  if(PZ.mode===1){ const p=pts[0]; if(!PZ.moved&&Math.hypot(p.x-PZ.c[0],p.y-PZ.c[1])<6)return; PZ.moved=true; place(PZ.svg,PZ.v0,PZ.P,p.x,p.y,PZ.v0.w); }
+  else if(pts.length>=2){ const [a,b]=pts,d=Math.hypot(a.x-b.x,a.y-b.y)||1; place(PZ.svg,PZ.v0,PZ.P,(a.x+b.x)/2,(a.y+b.y)/2,PZ.v0.w*PZ.d/d); }
+});
+const pzEnd=e=>{
+  if(!PTR.has(e.pointerId))return; PTR.delete(e.pointerId);
+  if(PZ&&PZ.mode===1&&!PZ.moved&&e.type==="pointerup"){ const t=Date.now(); if(t-lastTap<320){pzReset();lastTap=0}else lastTap=t; }
+  if(PTR.size&&PZ){ pzStart(PZ.svg); PZ.moved=true; } else PZ=null;   /* 두 손가락을 뗄 때는 톡으로 치지 않음 */
+};
+$("scene").addEventListener("pointerup",pzEnd); $("scene").addEventListener("pointercancel",pzEnd);
+$("scene").addEventListener("wheel",e=>{   /* PC: Ctrl+휠(노트북 두 손가락 벌리기)로 확대·축소 */
+  const svg=e.target.closest("svg"); if(!svg||!e.ctrlKey)return; e.preventDefault();
+  const v0=vbOf(svg); place(svg,v0,toSvg(svg,v0,e.clientX,e.clientY),e.clientX,e.clientY,v0.w*Math.exp(e.deltaY*0.004));
+},{passive:false});
+$("scene").addEventListener("click",e=>{ if(e.target.closest(".pz-reset")) pzReset(); });
 
 
 /* ── 메인 위성사진 ↔ 구역 길잡이 전환 ── */
