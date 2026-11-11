@@ -491,7 +491,7 @@ function shortest(s,t){
 }
 const label=k=>NODES[k].name;
 const rangeTxt=k=>NODES[k].lo?`${NODES[k].lo}~${NODES[k].hi}호 (예시)`:"호실 미정";
-const state = { from:"ENT_S", to:"W_2", step:0, view:"map", manual:null, slide:null, mapK:null };
+const state = { from:"ENT_S", to:"W_2", step:0, view:"all", manual:null, slide:null, mapK:null };
 const HALF={ NB:[{x0:3,x1:19,y0:YEND,y1:YEND+3,cap:"5북 · 서쪽 (5서와 막힘)"},{x0:19,x1:XEND,y0:YEND,y1:YEND+3,cap:"5북 · 동쪽 (엘리베이터 · 5동 쪽)"}] };
 const MRING=["W","N","E","NB"], bk=k=>k==="NL"||k==="NR"?"N":k;   /* 건물별 지도: 5남은 한 화면에 통째로 */
 const RING=["W","NL","NR","E","NB"];
@@ -988,7 +988,7 @@ function enterPart(k){
   sat.style.transformOrigin=`${(box.x-vb.x+box.width/2)/vb.width*100}% ${(box.y-vb.y+box.height/2)/vb.height*100}%`;
   const show=()=>{
     $("mapView").hidden=true; $("detail").hidden=false;
-    state.view="map"; state.mapK=null;
+    state.view="all"; state.mapK=null;   /* v48: 처음 들어가면 "5호관 전체" 탭 */
     let t=state.to;
     go(h.to,t);
     const d=$("detail"); d.classList.remove("arrive"); void d.offsetWidth; if(!RM) d.classList.add("arrive");
