@@ -268,6 +268,19 @@ body.fs{overflow:hidden}
 .stage.fs .back-mini{display:none}
 .stage.fs .fs-btn{background:var(--route)}
 @media (orientation:portrait){ .stage.fs .stage-top{flex-wrap:wrap} .stage.fs .floor-tabs,.stage.fs .bldg-tabs{flex:1 1 100%} }
+
+/* ── v51: 전체화면 버튼을 처음 보는 사람도 바로 찾게 (화려한 주황·분홍 + 빛 지나감 + 퍼지는 테두리) ── */
+.fs-btn:not([aria-pressed="true"]),.fs-float{position:relative;overflow:hidden;background:linear-gradient(135deg,#ff7a00,#ff2d6f)!important;color:#fff!important;border:0;
+  box-shadow:0 4px 14px rgba(255,60,90,.45);text-shadow:0 1px 1px rgba(0,0,0,.25);animation:fsGlow 1.8s ease-out infinite}
+.fs-btn:not([aria-pressed="true"])::after,.fs-float::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);transform:skewX(-20deg);animation:fsShine 2.4s ease-in-out infinite}
+@keyframes fsGlow{0%{box-shadow:0 0 0 0 rgba(255,60,90,.7),0 4px 14px rgba(255,60,90,.45)}70%{box-shadow:0 0 0 14px rgba(255,60,90,0),0 4px 14px rgba(255,60,90,.45)}100%{box-shadow:0 0 0 0 rgba(255,60,90,0),0 4px 14px rgba(255,60,90,.45)}}
+@keyframes fsShine{0%,55%{left:-60%}100%{left:130%}}
+.fs-btn:not([aria-pressed="true"]){font-size:15px;min-height:46px;padding:0 16px}
+.fs-float{position:absolute;right:10px;bottom:10px;z-index:3;min-height:48px;padding:0 18px;border-radius:999px;font-weight:800;font-size:16px;cursor:pointer}
+.fs-float .sub{display:block;font-size:11px;font-weight:600;opacity:.95}
+.stage.fs .fs-float{display:none}
+.stage.compact .fs-float{min-height:40px;font-size:14px}
+@media (prefers-reduced-motion:reduce){.fs-btn,.fs-float,.fs-btn::after,.fs-float::after{animation:none!important}}
 </style>
 
 <div class="wrap">
@@ -907,7 +920,7 @@ function render(){
   $("scene").innerHTML= half
     ? half.map(h=>{FS=[{...h,op:1},...focusSpec(fk).filter(s=>s.op<1&&s.x1>=h.x0&&s.x0<=h.x1)];return `<p class="half-cap">${h.cap}</p>`+scene(steps)}).join("")
     : scene(steps);
-  $("scene").insertAdjacentHTML("beforeend",`<button type="button" class="pz-reset"${state.zr?"":" hidden"}>↺ 원래대로</button>`); PTR.clear(); PZ=null;
+  $("scene").insertAdjacentHTML("beforeend",`<button type="button" class="pz-reset"${state.zr?"":" hidden"}>↺ 원래대로</button><button type="button" class="fs-float" aria-label="지도를 전체화면으로 크게 보기">⛶ 전체화면</button>`); PTR.clear(); PZ=null;
   if(state.view==="part"){
     const i=RING.indexOf(fk),pv=RING[i-1],nx=RING[i+1];
     $("scene").insertAdjacentHTML("beforeend",
@@ -1013,7 +1026,7 @@ $("scene").addEventListener("wheel",e=>{   /* PC: Ctrl+휠(노트북 두 손가�
   const svg=e.target.closest("svg"); if(!svg||!e.ctrlKey)return; e.preventDefault();
   const v0=vbOf(svg); place(svg,v0,toSvg(svg,v0,e.clientX,e.clientY),e.clientX,e.clientY,v0.w*Math.exp(e.deltaY*0.004));
 },{passive:false});
-$("scene").addEventListener("click",e=>{ if(e.target.closest(".pz-reset")) pzReset(); });
+$("scene").addEventListener("click",e=>{ if(e.target.closest(".pz-reset")) pzReset(); if(e.target.closest(".fs-float")) setFs(true); });
 
 
 /* ── 메인 위성사진 ↔ 구역 길잡이 전환 ── */
