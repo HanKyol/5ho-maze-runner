@@ -10,6 +10,7 @@
 :root{
   --bg:#f1f4f8; --surface:#ffffff; --ink:#16202d; --muted:#586377; --line:#d8dee8; --soft:#e9eef5;
   --a:#2f6db5; --a-ink:#ffffff; --a-land:#1f3f68; --b:#cf7410; --b-ink:#ffffff; --b-land:#7a4106; --route:#1f8e55;
+  --c-e:#6d4fc2; --c-e-bg:#efeafb; --c-w:#b85f0b; --c-w-bg:#fbefe2; --c-n:#2f6db5; --c-n-bg:#e7eff9; --c-nb:#0d7f7f; --c-nb-bg:#def2f2;
   --plate0:#dde3ea; --plate1:#e9edf3; --plate2:#f7f9fb; --pf:#cfd6e0; --ps:#c1c9d4; --edge:#3a4555; --pillar:#b6bfcb;
   --note-bg:#fff4d1; --note-ink:#6f4b00; --flag:#fff6a8; --block:#9aa4b3; --plain:#7d8896; --elev:#5b3fa0; --elev2:#7b62bd;
   --display:"Black Han Sans","IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
@@ -18,11 +19,13 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f141b; --surface:#171f2a; --ink:#e7ecf3; --muted:#9ba7b9; --line:#2b3646; --soft:#1d2733;
   --a:#6fa5e8; --a-ink:#0d1a2b; --a-land:#a9c9f2; --b:#f0a24c; --b-ink:#2a1700; --b-land:#f6c890; --route:#4ccb87;
+  --c-e:#b19bf5; --c-e-bg:#2a2340; --c-w:#f0a24c; --c-w-bg:#3a2a17; --c-n:#7fb0ee; --c-n-bg:#1d2b3d; --c-nb:#5cd0d0; --c-nb-bg:#163333;
   --plate0:#202934; --plate1:#26303d; --plate2:#2c3746; --pf:#3a4656; --ps:#334050; --edge:#8d9bb0; --pillar:#4a5768;
   --note-bg:#3a2f13; --note-ink:#f2d68e; --flag:#f3e48a; --block:#5a6779; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#0f141b; --surface:#171f2a; --ink:#e7ecf3; --muted:#9ba7b9; --line:#2b3646; --soft:#1d2733;
   --a:#6fa5e8; --a-ink:#0d1a2b; --a-land:#a9c9f2; --b:#f0a24c; --b-ink:#2a1700; --b-land:#f6c890; --route:#4ccb87;
+  --c-e:#b19bf5; --c-e-bg:#2a2340; --c-w:#f0a24c; --c-w-bg:#3a2a17; --c-n:#7fb0ee; --c-n-bg:#1d2b3d; --c-nb:#5cd0d0; --c-nb-bg:#163333;
   --plate0:#202934; --plate1:#26303d; --plate2:#2c3746; --pf:#3a4656; --ps:#334050; --edge:#8d9bb0; --pillar:#4a5768;
   --note-bg:#3a2f13; --note-ink:#f2d68e; --flag:#f3e48a; --block:#5a6779; color-scheme:dark }
 
@@ -205,6 +208,15 @@ svg text{font-family:var(--body)}
 @media (prefers-reduced-motion:reduce){.stage-bar button.go.nudge{animation:none}}
 .back-mini{display:none}
 .stage-bar button.go.back{background:var(--ink);border-color:var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.25);font-size:16px}
+.to-btn{display:flex;align-items:center;gap:8px;width:100%;min-height:42px;padding:8px 10px;border-radius:10px;border:2px solid var(--bc);background:var(--bb);color:var(--ink);font-size:15px;cursor:pointer;text-align:left}
+.to-btn .bk{flex:none;padding:2px 8px;border-radius:999px;background:var(--bc);color:var(--surface);font-weight:700;font-size:13px}
+.to-btn b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .to-btn .caret{color:var(--bc);font-weight:700}
+.to-panel{display:flex;flex-direction:column;gap:8px}
+.to-grp{display:grid;grid-template-columns:52px 1fr;gap:8px;align-items:start;padding:8px;border-radius:10px;background:var(--bb);border:1px solid var(--bc)}
+.to-grp .gh{display:grid;place-items:center;min-height:36px;border-radius:8px;background:var(--bc);color:var(--surface);font-weight:800;font-size:15px}
+.to-grp .gc{display:flex;flex-wrap:wrap;gap:6px}
+.to-grp button{min-height:36px;padding:6px 10px;border-radius:8px;border:1.5px solid var(--bc);background:var(--surface);color:var(--bc);font-weight:700;font-size:14px;cursor:pointer}
+.to-grp button[aria-pressed="true"]{background:var(--bc);color:var(--surface)}
 .dir-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;border:1px solid var(--line);border-radius:10px;padding:3px;background:var(--bg)}
 .dir-tabs button{border:0;background:transparent;min-height:40px;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;color:var(--muted)}
 .dir-tabs button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
@@ -310,8 +322,12 @@ svg text{font-family:var(--body)}
   <section class="panel" aria-label="출발지와 목적지">
     <div class="pick">
       <label class="field"><span class="label">출발</span><select id="from"></select></label>
-      <label class="field"><span class="label">도착</span><select id="to"></select></label>
+      <div class="field"><span class="label" id="toLbl">도착</span>
+        <button type="button" class="to-btn" id="toBtn" aria-expanded="false" aria-controls="toPanel"></button>
+        <select id="to" hidden aria-hidden="true" tabindex="-1"></select>
+      </div>
     </div>
+    <div class="to-panel" id="toPanel" role="group" aria-label="도착지 고르기 (건물별)" hidden></div>
     <div class="dir-tabs" role="group" aria-label="길 방향">
       <button type="button" id="dirGo" aria-pressed="true">가는 길</button>
       <button type="button" id="dirBack" aria-pressed="false">↩ 돌아가는 길</button>
@@ -806,7 +822,16 @@ function scene(steps){
 function fillSelects(){
   $("from").innerHTML=ENTS.map(en=>`<option value="${en.id}">${en.name}</option>`).join("");
   $("to").innerHTML=PLACES.map(k=>`<option value="${k}">${label(k)}</option>`).join("");
+  /* 도착지 고르기 판: 동·서·남·북 건물별로 색을 나눠서 */
+  const fo=k=>NODES[k].fl, byFl=(a,b)=>fo(a)-fo(b);
+  $("toPanel").innerHTML=BGRP.map(([g,name])=>{
+    const ks=PLACES.filter(k=>bgOf(k)===g).sort((a,b)=>g==="n"?(a.split("_")[0].localeCompare(b.split("_")[0])||byFl(a,b))||0:byFl(a,b));
+    const short=k=>g==="n"?label(k):flName(fo(k));
+    return `<div class="to-grp" style="--bc:var(--c-${g});--bb:var(--c-${g}-bg)"><span class="gh">${name}</span><div class="gc">${ks.map(k=>`<button type="button" data-k="${k}" aria-label="${label(k)}">${short(k)}</button>`).join("")}</div></div>`;
+  }).join("");
 }
+const BGRP=[["e","5동"],["w","5서"],["n","5남"],["nb","5북"]];
+const bgOf=k=>{const p=k.split("_")[0];return p==="E"?"e":p==="W"?"w":p==="NB"?"nb":"n"};
 function renderChips(){
   const order=[];for(let f=1;f<=NF;f++)for(const pt of PARTS)order.push(`${pt.id}_${f}`);
   $("chips").innerHTML=order.map(k=>{
@@ -816,6 +841,9 @@ function renderChips(){
 }
 function render(){
   $("from").value=state.from;$("to").value=state.to;
+  { const g=bgOf(state.to),bt=$("toBtn"); bt.style.setProperty("--bc",`var(--c-${g})`); bt.style.setProperty("--bb",`var(--c-${g}-bg)`);
+    bt.innerHTML=`<span class="bk">${BGRP.find(x=>x[0]===g)[1]}</span><b>${label(state.to)}</b><span class="caret">${$("toPanel").hidden?"▾":"▴"}</span>`; bt.setAttribute("aria-label",`도착: ${label(state.to)}. 눌러서 바꾸기`);
+    $("toPanel").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===state.to)); }
   document.querySelectorAll(".chip").forEach(el=>el.setAttribute("aria-pressed",el.dataset.id===state.to));
   if(state.from===state.to){
     $("routeTitle").textContent="출발지와 도착지가 같습니다";$("routeSum").textContent="도착지를 다른 곳으로 골라 주세요.";
@@ -869,6 +897,10 @@ function render(){
 const go=(f,t)=>{state.manual=null;state.back=false;state.from=f;state.to=t;state.step=0;$("msg").hidden=true;render()};
 $("from").addEventListener("change",e=>go(e.target.value,state.to));
 $("to").addEventListener("change",e=>go(state.from,e.target.value));
+const toOpen=o=>{$("toPanel").hidden=!o;$("toBtn").setAttribute("aria-expanded",o);render()};
+$("toBtn").addEventListener("click",()=>toOpen($("toPanel").hidden));
+$("toPanel").addEventListener("click",e=>{const b=e.target.closest("button[data-k]");if(!b)return;$("toPanel").hidden=true;$("toBtn").setAttribute("aria-expanded",false);go(state.from,b.dataset.k)});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("toPanel").hidden)toOpen(false)});
 
 
 $("searchForm").addEventListener("submit",e=>{
