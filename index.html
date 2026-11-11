@@ -516,7 +516,7 @@ function shortest(s,t){
 }
 const label=k=>NODES[k].name;
 const rangeTxt=k=>NODES[k].lo?`${NODES[k].lo}~${NODES[k].hi}호 (예시)`:"호실 미정";
-const state = { from:"ENT_S", to:"W_2", step:0, view:"all", manual:null, slide:null, mapK:null, floors:new Set() };   /* floors: 고른 층만 보기 (비면 전체) */
+const state = { from:"ENT_S", to:"W_2", step:0, view:"all", manual:null, slide:null, mapK:null, floors:new Set([1,2]) };   /* floors: 고른 층만 보기 (비면 전체). v50: 처음 기본은 1·2층 */
 const HALF={ NB:[{x0:3,x1:19,y0:YEND,y1:YEND+3,cap:"5북 · 서쪽 (5서와 막힘)"},{x0:19,x1:XEND,y0:YEND,y1:YEND+3,cap:"5북 · 동쪽 (엘리베이터 · 5동 쪽)"}] };
 const MRING=["W","N","E","NB"], bk=k=>k==="NL"||k==="NR"?"N":k;   /* 건물별 지도: 5남은 한 화면에 통째로 */
 const RING=["W","NL","NR","E","NB"];
@@ -1028,7 +1028,7 @@ function enterPart(k){
   sat.style.transformOrigin=`${(box.x-vb.x+box.width/2)/vb.width*100}% ${(box.y-vb.y+box.height/2)/vb.height*100}%`;
   const show=()=>{
     $("mapView").hidden=true; $("detail").hidden=false;
-    state.view="all"; state.mapK=null;   /* v48: 처음 들어가면 "5호관 전체" 탭 */
+    state.view="all"; state.mapK=null; state.floors=new Set([1,2]);   /* v48: 처음 들어가면 "5호관 전체" 탭, v50: 1·2층만 */
     let t=state.to;
     go(h.to,t);
     const d=$("detail"); d.classList.remove("arrive"); void d.offsetWidth; if(!RM) d.classList.add("arrive");
@@ -1079,7 +1079,11 @@ document.addEventListener("fullscreenchange",()=>{ if(!document.fullscreenElemen
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&isFs()) setFs(false); });
 (mqL.addEventListener?mqL.addEventListener("change",()=>{setCompact();render()}):mqL.addListener(()=>{setCompact();render()}));
 /* 목적지를 고르면 전체화면을 누르도록 이끔 */
-function nudgeFs(){ if(isFs())return; $("fsHint").hidden=false; const b=$("fsBtn"); b.classList.remove("nudge-fs"); void b.offsetWidth; b.classList.add("nudge-fs");
+function routeFloors(){ const f=new Set(); buildSteps().forEach(s=>{const z=NODES[s.node].p[2];f.add(Math.floor(z/H+1e-6)+1);f.add(Math.ceil(z/H-1e-6)+1)}); return f; }
+function nudgeFs(){
+  /* 고른 도착지가 지금 보이는 층 밖이면, 가는 길이 지나는 층을 보이게 더함 */
+  if(state.floors.size){ const rf=routeFloors(); if([...rf].some(f=>!state.floors.has(f))){ rf.forEach(f=>state.floors.add(f)); if(state.floors.size===NF+1) state.floors.clear(); render(); } }
+  if(isFs())return; $("fsHint").hidden=false; const b=$("fsBtn"); b.classList.remove("nudge-fs"); void b.offsetWidth; b.classList.add("nudge-fs");
   const st=$("stage"); window.scrollTo({top:Math.max(0,st.getBoundingClientRect().top+scrollY-8),behavior:RM?"auto":"smooth"}); }
 $("viewAll").addEventListener("click",()=>{state.zr=null;state.view="all";render()});
 $("viewMap").addEventListener("click",()=>{state.zr=null;state.mapK=null;state.view="map";render()});
